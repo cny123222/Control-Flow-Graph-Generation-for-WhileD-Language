@@ -39,7 +39,12 @@ class IRBinOp:
     right: str
     
     def __str__(self):
-        return f"{self.dest} = {self.left} {self.op} {self.right}"
+        # 比较和逻辑运算符需要加括号
+        comparison_ops = {'<', '<=', '>', '>=', '==', '!=', '&&', '||'}
+        if self.op in comparison_ops:
+            return f"{self.dest} = ({self.left} {self.op} {self.right})"
+        else:
+            return f"{self.dest} = {self.left} {self.op} {self.right}"
 
 @dataclass
 class IRUnOp:
@@ -268,66 +273,99 @@ class ControlFlowGraph:
             print()
     
     def to_mermaid(self) -> str:
-        """Generate Mermaid flowchart representation of the CFG.
+        """生成 Mermaid 流程图
         
-        Returns a string that can be rendered as a Mermaid diagram.
-        You can paste this into:
-        - GitHub/GitLab Markdown (```mermaid ... ```)
-        - https://mermaid.live/
-        - VS Code with Mermaid extension
+        特点：
+        - 判断语句用菱形表示
+        - 基本块只包含普通指令（不含跳转）
+        - 显示完整的指令，不省略
         """
         lines = ["flowchart TD"]
         
-        # Add nodes with their BB labels
-        for block in self.blocks:
-            # Use unique node ID based on block.id
-            node_id = f"B{block.id}"
-            
-            # Display label: use original label if exists
-            if block.label:
-                node_label = block.label
-            else:
-                node_label = f"BB_{block.id}"
-            
-            # Add instructions to the label (max 2 lines for readability)
-            if block.instructions or block.terminator:
-                content = []
-                
-                # Add regular instructions (max 2 for readability)
-                for i, instr in enumerate(block.instructions[:2]):
-                    content.append(str(instr))
-                if len(block.instructions) > 2:
-                    content.append(f"...")
-                
-                # Add terminator
-                if block.terminator:
-                    content.append(str(block.terminator))
-                
-                # Escape special characters for Mermaid
-                content_str = "<br/>".join(content)
-                content_str = content_str.replace('"', "'")
-                
-                lines.append(f'    {node_id}["{node_label}<br/>{content_str}"]')
-            else:
-                lines.append(f'    {node_id}["{node_label}"]')
-        
-        lines.append("")
-        
-        # Add edges
+        # 为每个块生成节点
         for block in self.blocks:
             block_id = f"B{block.id}"
             
-            if not block.successors:
-                # Exit node
-                lines.append(f"    {block_id} --> Exit([Exit])")
+            # 只显示普通指令（不含跳转）
+            if block.instructions:
+                content = []
+                for instr in block.instructions:
+                    instr_str = str(instr)
+                    # 转义特殊字符（只转义引号和&符号）
+                    instr_str = instr_str.replace('"', "'")
+                    instr_str = instr_str.replace('&', '&amp;')
+                    content.append(instr_str)
+                
+                # 用 <br/> 连接
+                content_str = "<br/>".join(content)
+                
+                # 矩形节点（普通基本块）
+                lines.append(f'    {block_id}["{content_str}"]')
             else:
-                for succ in block.successors:
-                    succ_id = f"B{succ.id}"
-                    lines.append(f"    {block_id} --> {succ_id}")
+                # 空块
+                lines.append(f'    {block_id}["(empty)"]')
+            
+            # 如果有条件跳转，创建菱形判断节点
+            if isinstance(block.terminator, IRCondJump):
+                cond_id = f"C{block.id}"
+                cond = block.terminator.cond
+                # 转义特殊字符（只转义 &，< > 在判断中可以保留）
+                cond = cond.replace('&', '&amp;')
+                # 菱形节点（单层花括号）
+                lines.append(f'    {cond_id}{{{cond}}}')
         
-        # Style entry and exit
         lines.append("")
-        lines.append(f"    style B{self.entry_block.id if self.entry_block else 0} fill:#e1f5e1")
+        
+        # 生成边
+        for block in self.blocks:
+            block_id = f"B{block.id}"
+            
+            if isinstance(block.terminator, IRCondJump):
+                # 条件跳转：基本块 -> 菱形判断 -> true/false 分支
+                cond_id = f"C{block.id}"
+                lines.append(f"    {block_id} --> {cond_id}")
+                
+                # false 分支：跳转到目标
+                target_label = block.terminator.label
+                false_target = None
+                for b in self.blocks:
+                    if b.label == target_label:
+                        false_target = b
+                        break
+                
+                # true 分支：fall-through 到下一个块
+                true_target = None
+                if len(block.successors) == 2:
+                    for succ in block.successors:
+                        if succ != false_target:
+                            true_target = succ
+                            break
+                
+                if false_target:
+                    lines.append(f"    {cond_id} -->|false| B{false_target.id}")
+                if true_target:
+                    lines.append(f"    {cond_id} -->|true| B{true_target.id}")
+                
+            elif isinstance(block.terminator, IRJump):
+                # 无条件跳转：直接连接
+                target_label = block.terminator.label
+                for b in self.blocks:
+                    if b.label == target_label:
+                        lines.append(f"    {block_id} --> B{b.id}")
+                        break
+            else:
+                # 没有跳转：fall-through
+                if block.successors:
+                    for succ in block.successors:
+                        lines.append(f"    {block_id} --> B{succ.id}")
+                elif not block.successors:
+                    # 出口
+                    lines.append(f"    {block_id} --> Exit([Exit])")
+        
+        # 样式
+        lines.append("")
+        if self.entry_block:
+            lines.append(f"    style B{self.entry_block.id} fill:#e1f5e1")
         lines.append("    style Exit fill:#ffe1e1")
         
         return "\n".join(lines)

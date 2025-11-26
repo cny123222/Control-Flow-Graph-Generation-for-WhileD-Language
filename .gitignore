@@ -43,3 +43,6 @@ Thumbs.db
 # Lecture notes (optional, you can remove if needed)
 Syntax.pdf
 Compiler.pdf
+
+# Generated outputs (keep these, don't ignore)
+# mermaid_outputs/

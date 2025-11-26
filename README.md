@@ -19,8 +19,11 @@
 ### 运行演示
 
 ```bash
-# 运行完整演示
+# 终端演示（2个示例程序）
 python demo.py
+
+# 终端演示 + 生成 Mermaid 文件（6个测试用例）
+python demo.py --generate
 
 # 运行所有测试用例
 python main.py
@@ -83,9 +86,10 @@ BB_2:
 ├── ast_definition.py      # WhileD AST 节点定义
 ├── ir_representation.py   # IR 指令和 CFG 类
 ├── cfg_generator.py       # AST → CFG 转换逻辑
-├── demo.py               # 演示程序
-├── main.py               # 测试用例
-└── README.md            # 本文件
+├── demo.py                # 演示程序（终端演示 + Mermaid 文件生成）
+├── main.py                # 测试用例
+├── mermaid_outputs/       # 生成的流程图（运行 demo.py --generate 后）
+└── README.md              # 本文件
 ```
 
 ## 实现特性
@@ -177,10 +181,32 @@ program = CSeq(
 
 ## 可视化
 
-生成 Mermaid 流程图：
+### 方法1：终端查看
 
 ```python
 print(cfg.to_mermaid())
 ```
 
 将输出复制到 https://mermaid.live/ 即可查看图形化流程图。
+
+### 方法2：生成 Mermaid 文件
+
+```bash
+python demo.py --generate
+```
+
+生成 6 个测试用例的 Mermaid 流程图，保存到 `mermaid_outputs/` 目录：
+
+| 文件 | 描述 |
+|------|------|
+| `test1_while_loop.md` | While 循环 |
+| `test2_if_else.md` | If-Else 分支 |
+| `test3_shortcircuit_and.md` | 短路求值 AND |
+| `test4_shortcircuit_or.md` | 短路求值 OR |
+| `test5_nested.md` | 嵌套控制流 |
+| `test6_pointer.md` | 指针操作 |
+
+每个文件包含：
+- 📊 Mermaid 流程图代码
+- 📝 阶段1：表达式拆分 (LABEL)
+- 📦 阶段2：基本块 (BB)
