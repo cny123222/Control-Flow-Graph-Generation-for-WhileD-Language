@@ -184,12 +184,3 @@ print(cfg.to_mermaid())
 ```
 
 将输出复制到 https://mermaid.live/ 即可查看图形化流程图。
-
-## 文档
-
-- `README.md`: 使用说明（本文件）
-- `task_requirement.md`: 作业需求
-
-## 作业要求
-
-查看 `task_requirement.md` 了解详细的作业要求和规范。
