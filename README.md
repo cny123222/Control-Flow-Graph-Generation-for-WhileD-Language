@@ -85,9 +85,7 @@ BB_2:
 ├── cfg_generator.py       # AST → CFG 转换逻辑
 ├── demo.py               # 演示程序
 ├── main.py               # 测试用例
-├── README.md            # 本文件
-├── task_requirement.md  # 作业要求
-└── requirements.txt     # 依赖（无）
+└── README.md            # 本文件
 ```
 
 ## 实现特性
