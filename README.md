@@ -60,7 +60,7 @@ print(cfg.to_mermaid())
 **阶段1：表达式拆分 (LABEL)**
 ```
 LABEL_1:
-    #0 = i < n
+    #0 = (i < n)
     if (! #0) then jmp LABEL_2
     #1 = i + 1
     i = #1
@@ -71,7 +71,7 @@ LABEL_2:
 **阶段2：基本块 (BB)**
 ```
 BB_1:
-    #0 = i < n
+    #0 = (i < n)
     if (! #0) then jmp BB_2
     #1 = i + 1
     i = #1
@@ -84,7 +84,7 @@ BB_2:
 flowchart TD
     B0["#0 = (i < n)"]
     C0{#0}
-    B1["#1 = s + i<br/>s = #1<br/>#2 = i + 1<br/>i = #2"]
+    B1["#1 = i + 1<br/>i = #1"]
     B2["(empty)"]
 
     B0 --> C0
