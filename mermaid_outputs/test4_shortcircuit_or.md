@@ -6,10 +6,10 @@
 
 ```mermaid
 flowchart TD
-    B0["#2 = (x == 0)<br/>#0 = #2"]
-    C0{#0}
-    B1["(empty)"]
-    B2["#3 = (y > 10)<br/>#0 = #3"]
+    B0["#1 = (x == 0)"]
+    C0{#1}
+    B1["#0 = 1"]
+    B2["#2 = (y > 10)<br/>#0 = #2"]
     B3["result = #0"]
 
     B0 --> C0
@@ -27,14 +27,14 @@ flowchart TD
 
 ```
 LABEL_entry:
-    #2 = (x == 0)
+    #1 = (x == 0)
+    if (! #1) then jmp LABEL_1
+    #0 = 1
+    jmp LABEL_2
+LABEL_1:
+    #2 = (y > 10)
     #0 = #2
-    if (! #0) then jmp LABEL_4
-    jmp LABEL_5
-LABEL_4:
-    #3 = (y > 10)
-    #0 = #3
-LABEL_5:
+LABEL_2:
     result = #0
 ```
 
@@ -42,13 +42,13 @@ LABEL_5:
 
 ```
 BB_1:
-    #2 = (x == 0)
-    #0 = #2
-    if (! #0) then jmp BB_2
+    #1 = (x == 0)
+    if (! #1) then jmp BB_2
+    #0 = 1
     jmp BB_3
 BB_2:
-    #3 = (y > 10)
-    #0 = #3
+    #2 = (y > 10)
+    #0 = #2
 BB_3:
     result = #0
 ```

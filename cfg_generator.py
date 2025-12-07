@@ -160,10 +160,13 @@ class CFGGenerator:
             # Evaluate left
             left_instrs, left_var = self.flatten_expr(left)
             instructions.extend(left_instrs)
-            instructions.append(IRAssign(result_temp, left_var))
+            
+            # 优化：只有简单操作数才跳过赋值，其他情况直接使用返回的变量
+            # 不再需要额外的赋值语句
+            cond_var = left_var
             
             # If left is false, jump to false_label
-            instructions.append(IRCondJump(result_temp, false_label))
+            instructions.append(IRCondJump(cond_var, false_label))
             
             # Evaluate right (only if left was true)
             right_instrs, right_var = self.flatten_expr(right)
@@ -182,43 +185,22 @@ class CFGGenerator:
         
         elif op == '||':
             # OR: Short-circuit if left is true
-            # We need to check if left is true, but we only have "if (! cond)"
-            # So we invert the logic: if left is false, evaluate right
-            
-            true_label = self.fresh_label()
-            end_label = self.fresh_label()
-            
-            # Evaluate left
-            left_instrs, left_var = self.flatten_expr(left)
-            instructions.extend(left_instrs)
-            instructions.append(IRAssign(result_temp, left_var))
-            
-            # If left is false (!left is true), skip to evaluating right
-            instructions.append(IRCondJump(result_temp, self.fresh_label()))  # temp label for "not true" path
-            
-            # Left is true: set result to 1 and jump to end
-            instructions.append(IRAssign(result_temp, "1"))
-            instructions.append(IRJump(end_label))
-            
-            # Left is false: evaluate right
-            # Re-insert the label we created above
-            instructions[-3] = IRCondJump(result_temp, self.label_counter)  # Fix this
-            
-            # Let me rewrite this more clearly:
-            instructions = []
+            # If left is false, evaluate right
             false_label = self.fresh_label()
             end_label = self.fresh_label()
             
             # Evaluate left
             left_instrs, left_var = self.flatten_expr(left)
             instructions.extend(left_instrs)
-            instructions.append(IRAssign(result_temp, left_var))
+            
+            # 优化：直接使用返回的变量，不需要额外赋值
+            cond_var = left_var
             
             # If left is false, evaluate right
-            instructions.append(IRCondJump(result_temp, false_label))
+            instructions.append(IRCondJump(cond_var, false_label))
             
-            # Left is true: result is already set to left_var (true/1)
-            # Just jump to end
+            # Left is true: set result to 1
+            instructions.append(IRAssign(result_temp, "1"))
             instructions.append(IRJump(end_label))
             
             # False label: evaluate right

@@ -6,8 +6,8 @@
 
 ```mermaid
 flowchart TD
-    B0["#0 = p"]
-    C0{#0}
+    B0["(empty)"]
+    C0{p}
     B1["#1 = *p<br/>#2 = (#1 != 0)<br/>#0 = #2"]
     B2["#0 = 0"]
     B3["result = #0"]
@@ -27,8 +27,7 @@ flowchart TD
 
 ```
 LABEL_entry:
-    #0 = p
-    if (! #0) then jmp LABEL_1
+    if (! p) then jmp LABEL_1
     #1 = *p
     #2 = (#1 != 0)
     #0 = #2
@@ -43,8 +42,7 @@ LABEL_2:
 
 ```
 BB_1:
-    #0 = p
-    if (! #0) then jmp BB_2
+    if (! p) then jmp BB_2
     #1 = *p
     #2 = (#1 != 0)
     #0 = #2
