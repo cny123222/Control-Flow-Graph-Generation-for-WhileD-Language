@@ -8,7 +8,7 @@ This module implements the core transformation logic:
 4. Basic block construction from linear IR
 """
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from ast_definition import *
 from ir_representation import *
 
@@ -52,11 +52,12 @@ class CFGGenerator:
     # Expression Flattener
     # ==================
     
-    def flatten_expr(self, expr: Expr) -> Tuple[List[Instruction], str]:
+    def flatten_expr(self, expr: Expr, dest: Optional[str] = None) -> Tuple[List[Instruction], str]:
         """Flatten an expression into linear IR instructions.
         
         Args:
             expr: The expression to flatten
+            dest: Optional destination variable. If provided, the result will be stored here.
             
         Returns:
             (instructions, result_variable): The list of IR instructions
@@ -74,49 +75,49 @@ class CFGGenerator:
         elif isinstance(expr, EBinop):
             # Handle short-circuit operators specially
             if expr.op in ['&&', '||']:
-                return self.flatten_shortcircuit(expr.op, expr.left, expr.right)
+                return self.flatten_shortcircuit(expr.op, expr.left, expr.right, dest)
             
             # Regular binary operation
             left_instrs, left_var = self.flatten_expr(expr.left)
             right_instrs, right_var = self.flatten_expr(expr.right)
             
-            result_temp = self.fresh_temp()
-            result_instr = IRBinOp(result_temp, left_var, expr.op, right_var)
+            result_var = dest if dest else self.fresh_temp()
+            result_instr = IRBinOp(result_var, left_var, expr.op, right_var)
             
-            return (left_instrs + right_instrs + [result_instr], result_temp)
+            return (left_instrs + right_instrs + [result_instr], result_var)
         
         elif isinstance(expr, EUnop):
             # Unary operation
             operand_instrs, operand_var = self.flatten_expr(expr.expr)
             
-            result_temp = self.fresh_temp()
-            unop_instr = IRUnOp(result_temp, expr.op, operand_var)
+            result_var = dest if dest else self.fresh_temp()
+            unop_instr = IRUnOp(result_var, expr.op, operand_var)
             
-            return (operand_instrs + [unop_instr], result_temp)
+            return (operand_instrs + [unop_instr], result_var)
         
         elif isinstance(expr, EDeref):
             # Dereference: *e
             addr_instrs, addr_var = self.flatten_expr(expr.expr)
             
-            result_temp = self.fresh_temp()
-            deref_instr = IRDeref(result_temp, addr_var)
+            result_var = dest if dest else self.fresh_temp()
+            deref_instr = IRDeref(result_var, addr_var)
             
-            return (addr_instrs + [deref_instr], result_temp)
+            return (addr_instrs + [deref_instr], result_var)
         
         elif isinstance(expr, EAddrOf):
             # Address-of: &e
             # Note: e should be an L-value (typically EVar)
             if isinstance(expr.expr, EVar):
-                result_temp = self.fresh_temp()
-                addrof_instr = IRAddrOf(result_temp, expr.expr.name)
-                return ([addrof_instr], result_temp)
+                result_var = dest if dest else self.fresh_temp()
+                addrof_instr = IRAddrOf(result_var, expr.expr.name)
+                return ([addrof_instr], result_var)
             else:
                 # For more complex expressions, flatten first
                 # (though semantically this might be invalid)
                 inner_instrs, inner_var = self.flatten_expr(expr.expr)
-                result_temp = self.fresh_temp()
-                addrof_instr2 = IRAddrOf(result_temp, inner_var)
-                return (inner_instrs + [addrof_instr2], result_temp)
+                result_var = dest if dest else self.fresh_temp()
+                addrof_instr2 = IRAddrOf(result_var, inner_var)
+                return (inner_instrs + [addrof_instr2], result_var)
         
         else:
             raise ValueError(f"Unknown expression type: {type(expr)}")
@@ -125,7 +126,7 @@ class CFGGenerator:
     # Short-Circuit Handler
     # ==================
     
-    def flatten_shortcircuit(self, op: str, left: Expr, right: Expr) -> Tuple[List[Instruction], str]:
+    def flatten_shortcircuit(self, op: str, left: Expr, right: Expr, dest: Optional[str] = None) -> Tuple[List[Instruction], str]:
         """Handle short-circuit evaluation for && and ||.
         
         Converts logical operators into control flow with jumps.
@@ -149,7 +150,7 @@ class CFGGenerator:
             END_LABEL:
         """
         
-        result_temp = self.fresh_temp()
+        result_temp = dest if dest else self.fresh_temp()
         instructions = []
         
         if op == '&&':
@@ -169,9 +170,9 @@ class CFGGenerator:
             instructions.append(IRCondJump(cond_var, false_label))
             
             # Evaluate right (only if left was true)
-            right_instrs, right_var = self.flatten_expr(right)
+            # 优化：直接将结果写入 result_temp
+            right_instrs, right_var = self.flatten_expr(right, result_temp)
             instructions.extend(right_instrs)
-            instructions.append(IRAssign(result_temp, right_var))
             
             # Jump to end
             instructions.append(IRJump(end_label))
@@ -205,9 +206,9 @@ class CFGGenerator:
             
             # False label: evaluate right
             instructions.append(IRLabel(false_label))
-            right_instrs, right_var = self.flatten_expr(right)
+            # 优化：直接将结果写入 result_temp
+            right_instrs, right_var = self.flatten_expr(right, result_temp)
             instructions.extend(right_instrs)
-            instructions.append(IRAssign(result_temp, right_var))
             
             # End label
             instructions.append(IRLabel(end_label))

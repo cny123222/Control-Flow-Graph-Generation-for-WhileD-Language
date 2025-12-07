@@ -8,7 +8,7 @@
 flowchart TD
     B0["(empty)"]
     C0{p}
-    B1["#1 = *p<br/>#2 = (#1 != 0)<br/>#0 = #2"]
+    B1["#1 = *p<br/>#0 = (#1 != 0)"]
     B2["#0 = p"]
     B3["result = #0"]
 
@@ -29,8 +29,7 @@ flowchart TD
 LABEL_entry:
     if (! p) then jmp LABEL_1
     #1 = *p
-    #2 = (#1 != 0)
-    #0 = #2
+    #0 = (#1 != 0)
     jmp LABEL_2
 LABEL_1:
     #0 = p
@@ -44,8 +43,7 @@ LABEL_2:
 BB_1:
     if (! p) then jmp BB_2
     #1 = *p
-    #2 = (#1 != 0)
-    #0 = #2
+    #0 = (#1 != 0)
     jmp BB_3
 BB_2:
     #0 = p
