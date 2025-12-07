@@ -8,7 +8,7 @@
 flowchart TD
     B0["#0 = (i < n)"]
     C0{#0}
-    B1["#1 = s + i<br/>s = #1<br/>#2 = i + 1<br/>i = #2"]
+    B1["s = s + i<br/>i = i + 1"]
     B2["(empty)"]
 
     B0 --> C0
@@ -27,10 +27,8 @@ flowchart TD
 LABEL_1:
     #0 = (i < n)
     if (! #0) then jmp LABEL_2
-    #1 = s + i
-    s = #1
-    #2 = i + 1
-    i = #2
+    s = s + i
+    i = i + 1
     jmp LABEL_1
 LABEL_2:
 ```
@@ -41,10 +39,8 @@ LABEL_2:
 BB_1:
     #0 = (i < n)
     if (! #0) then jmp BB_2
-    #1 = s + i
-    s = #1
-    #2 = i + 1
-    i = #2
+    s = s + i
+    i = i + 1
     jmp BB_1
 BB_2:
 ```

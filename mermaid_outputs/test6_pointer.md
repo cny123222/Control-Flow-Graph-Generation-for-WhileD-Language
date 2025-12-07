@@ -6,7 +6,7 @@
 
 ```mermaid
 flowchart TD
-    B0["#0 = &amp;x<br/>p = #0<br/>*p = 42"]
+    B0["p = &amp;x<br/>*p = 42"]
 
     B0 --> Exit([Exit])
 
@@ -18,8 +18,7 @@ flowchart TD
 
 ```
 LABEL_entry:
-    #0 = &x
-    p = #0
+    p = &x
     *p = 42
 ```
 
@@ -27,7 +26,6 @@ LABEL_entry:
 
 ```
 BB_1:
-    #0 = &x
-    p = #0
+    p = &x
     *p = 42
 ```

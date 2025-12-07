@@ -9,7 +9,7 @@ flowchart TD
     B0["#0 = (x > 0)"]
     C0{#0}
     B1["y = x"]
-    B2["#1 = - x<br/>y = #1"]
+    B2["y = - x"]
     B3["(empty)"]
 
     B0 --> C0
@@ -32,8 +32,7 @@ LABEL_entry:
     y = x
     jmp LABEL_2
 LABEL_1:
-    #1 = - x
-    y = #1
+    y = - x
 LABEL_2:
 ```
 
@@ -46,7 +45,6 @@ BB_1:
     y = x
     jmp BB_3
 BB_2:
-    #1 = - x
-    y = #1
+    y = - x
 BB_3:
 ```

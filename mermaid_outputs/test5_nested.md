@@ -11,7 +11,7 @@ flowchart TD
     C1{#0}
     B2["#1 = (i > 0)"]
     C2{#1}
-    B3["#2 = sum + i<br/>sum = #2"]
+    B3["sum = sum + i"]
     B4["(empty)"]
     B5["(empty)"]
     B6["(empty)"]
@@ -42,8 +42,7 @@ LABEL_1:
     if (! #0) then jmp LABEL_2
     #1 = (i > 0)
     if (! #1) then jmp LABEL_3
-    #2 = sum + i
-    sum = #2
+    sum = sum + i
     jmp LABEL_4
 LABEL_3:
 LABEL_4:
@@ -61,8 +60,7 @@ BB_2:
     if (! #0) then jmp BB_5
     #1 = (i > 0)
     if (! #1) then jmp BB_3
-    #2 = sum + i
-    sum = #2
+    sum = sum + i
     jmp BB_4
 BB_3:
 BB_4:

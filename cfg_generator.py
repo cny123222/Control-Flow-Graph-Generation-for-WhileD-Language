@@ -41,6 +41,13 @@ class CFGGenerator:
         self.label_counter += 1
         return f"LABEL_{self.label_counter}"
     
+    def is_simple_operand(self, expr: Expr) -> bool:
+        """判断表达式是否为简单操作数（变量或常量）
+        
+        简单操作数可以直接在指令中使用，不需要拆分到临时变量
+        """
+        return isinstance(expr, (EConst, EVar))
+    
     # ==================
     # Expression Flattener
     # ==================
@@ -245,12 +252,44 @@ class CFGGenerator:
         
         elif isinstance(stmt, CAsgnVar):
             # Variable assignment: x = e
-            expr_instrs, expr_var = self.flatten_expr(stmt.expr)
+            expr = stmt.expr
             
-            # Final assignment
-            assign_instr = IRAssign(stmt.var, expr_var)
+            # 优化：简单表达式直接生成一条指令，不拆分
+            if isinstance(expr, (EConst, EVar)):
+                # x = 5 或 x = y（直接赋值）
+                source = str(expr.value) if isinstance(expr, EConst) else expr.name
+                return [IRAssign(stmt.var, source)]
             
-            return expr_instrs + [assign_instr]
+            elif isinstance(expr, EUnop) and self.is_simple_operand(expr.expr):
+                # x = -y 或 x = !flag（简单一元运算）
+                inner = expr.expr
+                operand = str(inner.value) if isinstance(inner, EConst) else (inner.name if isinstance(inner, EVar) else str(inner))
+                return [IRUnOp(stmt.var, expr.op, operand)]
+            
+            elif isinstance(expr, EBinop) and expr.op not in ['&&', '||'] and \
+                 self.is_simple_operand(expr.left) and self.is_simple_operand(expr.right):
+                # x = y + z（简单二元运算，但不包括短路运算符）
+                left_expr = expr.left
+                right_expr = expr.right
+                left = str(left_expr.value) if isinstance(left_expr, EConst) else (left_expr.name if isinstance(left_expr, EVar) else str(left_expr))
+                right = str(right_expr.value) if isinstance(right_expr, EConst) else (right_expr.name if isinstance(right_expr, EVar) else str(right_expr))
+                return [IRBinOp(stmt.var, left, expr.op, right)]
+            
+            elif isinstance(expr, EDeref) and self.is_simple_operand(expr.expr):
+                # x = *p（简单解引用）
+                inner = expr.expr
+                addr = str(inner.value) if isinstance(inner, EConst) else (inner.name if isinstance(inner, EVar) else str(inner))
+                return [IRDeref(stmt.var, addr)]
+            
+            elif isinstance(expr, EAddrOf) and isinstance(expr.expr, EVar):
+                # x = &y（简单取址）
+                return [IRAddrOf(stmt.var, expr.expr.name)]
+            
+            else:
+                # 复杂表达式：拆分到临时变量
+                expr_instrs, expr_var = self.flatten_expr(expr)
+                assign_instr = IRAssign(stmt.var, expr_var)
+                return expr_instrs + [assign_instr]
         
         elif isinstance(stmt, CAsgnDeref):
             # Pointer assignment: *e1 = e2
