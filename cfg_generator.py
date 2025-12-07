@@ -176,9 +176,9 @@ class CFGGenerator:
             # Jump to end
             instructions.append(IRJump(end_label))
             
-            # False label: set result to 0
+            # False label: result is left (which is false)
             instructions.append(IRLabel(false_label))
-            instructions.append(IRAssign(result_temp, "0"))
+            instructions.append(IRAssign(result_temp, left_var))
             
             # End label
             instructions.append(IRLabel(end_label))
@@ -199,8 +199,8 @@ class CFGGenerator:
             # If left is false, evaluate right
             instructions.append(IRCondJump(cond_var, false_label))
             
-            # Left is true: set result to 1
-            instructions.append(IRAssign(result_temp, "1"))
+            # Left is true: result is left (which is true)
+            instructions.append(IRAssign(result_temp, left_var))
             instructions.append(IRJump(end_label))
             
             # False label: evaluate right

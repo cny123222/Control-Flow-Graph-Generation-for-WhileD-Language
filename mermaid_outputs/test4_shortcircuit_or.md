@@ -8,7 +8,7 @@
 flowchart TD
     B0["#1 = (x == 0)"]
     C0{#1}
-    B1["#0 = 1"]
+    B1["#0 = #1"]
     B2["#2 = (y > 10)<br/>#0 = #2"]
     B3["result = #0"]
 
@@ -29,7 +29,7 @@ flowchart TD
 LABEL_entry:
     #1 = (x == 0)
     if (! #1) then jmp LABEL_1
-    #0 = 1
+    #0 = #1
     jmp LABEL_2
 LABEL_1:
     #2 = (y > 10)
@@ -44,7 +44,7 @@ LABEL_2:
 BB_1:
     #1 = (x == 0)
     if (! #1) then jmp BB_2
-    #0 = 1
+    #0 = #1
     jmp BB_3
 BB_2:
     #2 = (y > 10)
