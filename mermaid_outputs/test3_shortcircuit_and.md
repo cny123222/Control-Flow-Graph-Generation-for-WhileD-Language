@@ -8,9 +8,9 @@
 flowchart TD
     B0["(empty)"]
     C0{p}
-    B1["#1 = *p<br/>#0 = (#1 != 0)"]
-    B2["#0 = p"]
-    B3["result = #0"]
+    B1["#0 = *p<br/>result = (#0 != 0)"]
+    B2["result = p"]
+    B3["(empty)"]
 
     B0 --> C0
     C0 -->|false| B2
@@ -28,13 +28,12 @@ flowchart TD
 ```
 LABEL_entry:
     if (! p) then jmp LABEL_1
-    #1 = *p
-    #0 = (#1 != 0)
+    #0 = *p
+    result = (#0 != 0)
     jmp LABEL_2
 LABEL_1:
-    #0 = p
+    result = p
 LABEL_2:
-    result = #0
 ```
 
 ## 阶段2：基本块 (BB)
@@ -42,11 +41,10 @@ LABEL_2:
 ```
 BB_1:
     if (! p) then jmp BB_2
-    #1 = *p
-    #0 = (#1 != 0)
+    #0 = *p
+    result = (#0 != 0)
     jmp BB_3
 BB_2:
-    #0 = p
+    result = p
 BB_3:
-    result = #0
 ```

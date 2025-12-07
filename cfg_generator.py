@@ -269,10 +269,9 @@ class CFGGenerator:
                 return [IRAddrOf(stmt.var, expr.expr.name)]
             
             else:
-                # 复杂表达式：拆分到临时变量
-                expr_instrs, expr_var = self.flatten_expr(expr)
-                assign_instr = IRAssign(stmt.var, expr_var)
-                return expr_instrs + [assign_instr]
+                # 复杂表达式：直接写入目标变量
+                expr_instrs, expr_var = self.flatten_expr(expr, dest=stmt.var)
+                return expr_instrs
         
         elif isinstance(stmt, CAsgnDeref):
             # Pointer assignment: *e1 = e2

@@ -6,11 +6,11 @@
 
 ```mermaid
 flowchart TD
-    B0["#1 = (x == 0)"]
-    C0{#1}
-    B1["#0 = #1"]
-    B2["#0 = (y > 10)"]
-    B3["result = #0"]
+    B0["#0 = (x == 0)"]
+    C0{#0}
+    B1["result = #0"]
+    B2["result = (y > 10)"]
+    B3["(empty)"]
 
     B0 --> C0
     C0 -->|false| B2
@@ -27,26 +27,24 @@ flowchart TD
 
 ```
 LABEL_entry:
-    #1 = (x == 0)
-    if (! #1) then jmp LABEL_1
-    #0 = #1
+    #0 = (x == 0)
+    if (! #0) then jmp LABEL_1
+    result = #0
     jmp LABEL_2
 LABEL_1:
-    #0 = (y > 10)
+    result = (y > 10)
 LABEL_2:
-    result = #0
 ```
 
 ## 阶段2：基本块 (BB)
 
 ```
 BB_1:
-    #1 = (x == 0)
-    if (! #1) then jmp BB_2
-    #0 = #1
+    #0 = (x == 0)
+    if (! #0) then jmp BB_2
+    result = #0
     jmp BB_3
 BB_2:
-    #0 = (y > 10)
+    result = (y > 10)
 BB_3:
-    result = #0
 ```
