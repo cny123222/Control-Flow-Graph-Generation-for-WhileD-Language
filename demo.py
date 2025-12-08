@@ -136,6 +136,14 @@ while (i < n && arr != 0) do {
     print_section("阶段 2：基本块 (使用 BB)")
     cfg2.print_blocks_structure()
     
+    # 阶段 3：流程图
+    print_section("阶段 3：流程图 (Mermaid)")
+    print("复制以下代码到 https://mermaid.live/ 查看图形化流程图：")
+    print("-" * 70)
+    print("```mermaid")
+    print(cfg2.to_mermaid())
+    print("```")
+    
     print("\n" + "=" * 80)
     print("终端演示完成")
     print("=" * 80)
