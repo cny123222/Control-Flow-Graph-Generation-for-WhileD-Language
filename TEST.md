@@ -345,20 +345,22 @@ while (i < n) do {
 
 #### 方法 1: 使用模板文件（推荐）
 
-1. **复制模板文件**:
+1. **复制模板文件到项目根目录**:
    ```bash
    cp mermaid_outputs/custom/example_template.py my_custom_test.py
    ```
+   **注意**: 必须复制到项目根目录，因为需要导入项目模块
 
 2. **编辑测试文件**:
    - 修改 `test_name`: 测试用例名称
    - 修改 `source`: 源程序文本（用于显示）
    - 修改 `program`: 构建 AST 节点
 
-3. **运行测试**:
+3. **在项目根目录运行测试**:
    ```bash
    python my_custom_test.py
    ```
+   **重要**: 必须在项目根目录运行，不能在其他目录运行
 
 4. **查看结果**:
    - 终端会显示生成的 IR 代码
@@ -367,7 +369,9 @@ while (i < n) do {
 
 #### 方法 2: 从头编写
 
-创建新的 Python 文件，参考以下模板：
+在项目根目录创建新的 Python 文件，参考以下模板：
+
+**注意**: 文件必须放在项目根目录，因为需要导入项目模块
 
 ```python
 from ast_definition import *

@@ -2,9 +2,12 @@
 自定义测试用例模板
 
 使用说明：
-1. 复制此文件并重命名为你的测试文件名
+1. 复制此文件到项目根目录，并重命名为你的测试文件名（如 my_test.py）
 2. 修改 source 和 program 部分
-3. 运行脚本生成 Mermaid 文件
+3. 在项目根目录运行: python my_test.py
+4. 生成的 Mermaid 文件会保存在 mermaid_outputs/custom/ 目录
+
+注意：必须从项目根目录运行此脚本，因为需要导入项目模块
 """
 
 from ast_definition import *
