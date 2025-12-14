@@ -167,10 +167,6 @@ def generate_mermaid_files():
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(f"# {name}\n\n")
             f.write(f"**描述**: {description}\n\n")
-            f.write("## 流程图\n\n")
-            f.write("```mermaid\n")
-            f.write(cfg.to_mermaid())
-            f.write("\n```\n\n")
             
             f.write("## 阶段1：表达式拆分 (LABEL)\n\n")
             f.write("```\n")
@@ -188,12 +184,17 @@ def generate_mermaid_files():
                     f.write(f"{instr.name}:\n")
                 else:
                     f.write(f"    {instr}\n")
-            f.write("```\n")
+            f.write("```\n\n")
+            
+            f.write("## 阶段3：控制流图\n\n")
+            f.write("```mermaid\n")
+            f.write(cfg.to_mermaid())
+            f.write("\n```\n")
         
         print(f"  ✓ {name}")
     
     # 创建输出目录
-    output_dir = "mermaid_outputs"
+    output_dir = "mermaid_outputs/demo"
     os.makedirs(output_dir, exist_ok=True)
     
     print("\n" + "=" * 80)
@@ -329,10 +330,8 @@ def generate_mermaid_files():
   - README.md                  (汇总文档)
 
 查看方法：
-1. 打开任意 .md 文件
-2. 复制 Mermaid 代码块
-3. 访问 https://mermaid.live/
-4. 粘贴代码即可看到图形化流程图
+方法1（推荐）：在 VSCode 中打开 .md 文件，点击预览图标即可查看流程图
+方法2：访问 https://mermaid.live/，复制 Mermaid 代码块到编辑器查看
     """)
 
 
