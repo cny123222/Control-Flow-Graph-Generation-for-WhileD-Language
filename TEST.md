@@ -8,10 +8,13 @@
 # 运行所有测试用例
 python main.py
 
+# 生成 Mermaid 可视化文件（main.py 的 10 个测试用例）
+python main.py --generate
+
 # 运行演示程序（包含 2 个示例）
 python demo.py
 
-# 生成 Mermaid 可视化文件（6 个测试用例）
+# 生成 Mermaid 可视化文件（demo.py 的 6 个测试用例）
 python demo.py --generate
 ```
 
@@ -333,4 +336,208 @@ while (i < n) do {
 ## 测试结果
 
 运行 `python main.py` 后，所有测试用例应全部通过，输出格式正确，CFG 结构完整。
+
+---
+
+## 自定义测试
+
+### 创建自定义测试
+
+#### 方法 1: 使用模板文件（推荐）
+
+1. **复制模板文件**:
+   ```bash
+   cp mermaid_outputs/custom/example_template.py my_custom_test.py
+   ```
+
+2. **编辑测试文件**:
+   - 修改 `test_name`: 测试用例名称
+   - 修改 `source`: 源程序文本（用于显示）
+   - 修改 `program`: 构建 AST 节点
+
+3. **运行测试**:
+   ```bash
+   python my_custom_test.py
+   ```
+
+4. **查看结果**:
+   - 终端会显示生成的 IR 代码
+   - Mermaid 文件保存在 `mermaid_outputs/custom/my_test.md`
+   - 在 VSCode 中打开 `.md` 文件，点击预览图标查看流程图
+
+#### 方法 2: 从头编写
+
+创建新的 Python 文件，参考以下模板：
+
+```python
+from ast_definition import *
+from cfg_generator import CFGGenerator
+
+# 1. 定义源程序（用于显示）
+source = "x = a + b"
+
+# 2. 构建 AST
+program = CAsgnVar(
+    "x",
+    EBinop("+", EVar("a"), EVar("b"))
+)
+
+# 3. 生成 CFG
+generator = CFGGenerator()
+cfg = generator.generate_cfg(program)
+
+# 4. 查看结果
+print("源程序:", source)
+print("\n阶段1: 表达式拆分 (LABEL)")
+cfg.print_linear_ir()
+
+print("\n阶段2: 基本块 (BB)")
+cfg.print_blocks_structure()
+
+print("\n阶段3: 控制流图 (Mermaid)")
+print(cfg.to_mermaid())
+```
+
+### 执行自定义测试
+
+#### 快速测试（仅终端输出）
+
+```bash
+python my_custom_test.py
+```
+
+输出包括：
+- 生成的 IR 代码（阶段1和阶段2）
+- Mermaid 流程图代码（阶段3）
+
+#### 生成 Mermaid 文件
+
+如果使用模板文件，运行后会自动生成 `.md` 文件。要手动生成，可以使用以下代码：
+
+```python
+def save_mermaid(name: str, source: str, program: Com, output_file: str):
+    """生成并保存 Mermaid 流程图"""
+    generator = CFGGenerator()
+    cfg = generator.generate_cfg(program)
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(f"# {name}\n\n")
+        f.write(f"**源程序**: `{source}`\n\n")
+        
+        f.write("## 阶段1：表达式拆分 (LABEL)\n\n")
+        f.write("```\n")
+        for instr in cfg.linear_ir:
+            if hasattr(instr, 'name'):
+                f.write(f"{instr.name}:\n")
+            else:
+                f.write(f"    {instr}\n")
+        f.write("```\n\n")
+        
+        f.write("## 阶段2：基本块 (BB)\n\n")
+        f.write("```\n")
+        for instr in cfg.bb_ir:
+            if hasattr(instr, 'name'):
+                f.write(f"{instr.name}:\n")
+            else:
+                f.write(f"    {instr}\n")
+        f.write("```\n\n")
+        
+        f.write("## 阶段3：控制流图\n\n")
+        f.write("```mermaid\n")
+        f.write(cfg.to_mermaid())
+        f.write("\n```\n")
+    
+    print(f"✓ 已保存到 {output_file}")
+
+# 使用示例
+save_mermaid("我的测试", source, program, "mermaid_outputs/custom/my_test.md")
+```
+
+### 查看测试结果
+
+#### 方法 1: VSCode 预览（推荐）
+
+1. 在 VSCode 中打开生成的 `.md` 文件（如 `mermaid_outputs/custom/my_test.md`）
+2. 点击右上角的预览图标（或按 `Cmd+Shift+V` / `Ctrl+Shift+V`）
+3. 流程图会自动渲染显示
+
+#### 方法 2: 在线查看
+
+1. 访问 https://mermaid.live/
+2. 打开生成的 `.md` 文件，复制 Mermaid 代码块（```mermaid ... ```）
+3. 粘贴到在线编辑器中
+4. 右侧会自动显示流程图
+
+#### 方法 3: 终端查看 IR
+
+运行测试脚本后，终端会直接显示：
+- **阶段1**: 表达式拆分（LABEL 格式）
+- **阶段2**: 基本块（BB 格式）
+- **阶段3**: Mermaid 代码（可复制到在线查看器）
+
+### 自定义测试示例
+
+#### 示例 1: 简单赋值
+
+```python
+source = "y = x + 1"
+program = CAsgnVar("y", EBinop("+", EVar("x"), EConst(1)))
+```
+
+#### 示例 2: While 循环
+
+```python
+source = "while (i < 10) do { i = i + 1 }"
+program = CWhile(
+    EBinop("<", EVar("i"), EConst(10)),
+    CAsgnVar("i", EBinop("+", EVar("i"), EConst(1)))
+)
+```
+
+#### 示例 3: If-Else 分支
+
+```python
+source = "if (x > 0) then y = x else y = -x"
+program = CIf(
+    EBinop(">", EVar("x"), EConst(0)),
+    CAsgnVar("y", EVar("x")),
+    CAsgnVar("y", EUnop("-", EVar("x")))
+)
+```
+
+#### 示例 4: 短路求值
+
+```python
+source = "result = x != 0 && y > 10"
+program = CAsgnVar(
+    "result",
+    EBinop("&&",
+        EBinop("!=", EVar("x"), EConst(0)),
+        EBinop(">", EVar("y"), EConst(10))
+    )
+)
+```
+
+#### 示例 5: 指针操作
+
+```python
+source = "p = &x; *p = 42"
+program = CSeq(
+    CAsgnVar("p", EAddrOf(EVar("x"))),
+    CAsgnDeref(EVar("p"), EConst(42))
+)
+```
+
+### 自定义测试目录
+
+所有自定义测试的 Mermaid 文件应保存在 `mermaid_outputs/custom/` 目录下。
+
+**文件命名建议**:
+- 使用有意义的名称，如 `my_test.md`, `complex_loop.md`
+- 避免与现有测试文件重名
+
+**参考资源**:
+- 详细指南: `mermaid_outputs/custom/README.md`
+- 模板文件: `mermaid_outputs/custom/example_template.py`
+- 示例测试: 查看 `mermaid_outputs/demo/` 和 `mermaid_outputs/main/` 目录
 

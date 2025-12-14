@@ -105,14 +105,16 @@ flowchart TD
 ├── demo.py                # 演示程序（终端演示 + Mermaid 文件生成）
 ├── main.py                # 测试用例（10 个测试）
 ├── mermaid_outputs/       # 生成的流程图（运行 demo.py --generate 后）
-├── README.md              # 项目说明文档（本文件）
+├── README.md              # 项目简介和快速开始（本文件）
+├── DOCUMENTATION.md       # 详细说明文档
 └── TEST.md                # 测试说明文档
 ```
 
 ### 文档说明
 
-- **README.md**: 项目概述、快速开始、实现原理、使用示例
-- **TEST.md**: 详细的测试用例说明，包括测试目的、输入、预期输出和验证方法
+- **README.md**: 项目简介、快速开始、基本使用示例
+- **DOCUMENTATION.md**: 详细的项目说明，包括系统架构、核心模块、实现原理、输出格式等
+- **TEST.md**: 详细的测试用例说明，包括内置测试和自定义测试方法
 
 ## 实现原理
 

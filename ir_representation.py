@@ -39,7 +39,7 @@ class IRBinOp:
     right: str
     
     def __str__(self):
-        # 比较和逻辑运算符需要加括号
+        # Comparison and logical operators need parentheses
         comparison_ops = {'<', '<=', '>', '>=', '==', '!=', '&&', '||'}
         if self.op in comparison_ops:
             return f"{self.dest} = ({self.left} {self.op} {self.right})"
@@ -205,13 +205,13 @@ class ControlFlowGraph:
     def __init__(self, blocks: List[BasicBlock]):
         self.blocks = blocks
         self.entry_block = blocks[0] if blocks else None
-        self.linear_ir: List[Instruction] = []  # LABEL版本（表达式拆分阶段）
-        self.bb_ir: List[Instruction] = []      # BB版本（基本块阶段）
+        self.linear_ir: List[Instruction] = []  # LABEL version (expression splitting phase)
+        self.bb_ir: List[Instruction] = []      # BB version (basic block phase)
     
     def __str__(self):
         """Print all blocks in order (using BB version)."""
         if self.bb_ir:
-            # 使用 BB 版本的指令
+            # Use BB version instructions
             lines = []
             for instr in self.bb_ir:
                 if isinstance(instr, IRLabel):
@@ -220,7 +220,7 @@ class ControlFlowGraph:
                     lines.append(f"    {instr}")
             return '\n'.join(lines)
         else:
-            # 降级到原来的方式
+            # Fallback to original method
             result = []
             for block in self.blocks:
                 block_str = str(block)
@@ -229,31 +229,31 @@ class ControlFlowGraph:
             return '\n'.join(result)
     
     def print_blocks_structure(self):
-        """打印基本块结构 - 使用BB_标签
+        """Print basic block structure - using BB_ labels.
         
-        基本块阶段：通过BB_标签来划分基本块
+        Basic block phase: Blocks are divided by BB_ labels.
         """
         print("=" * 80)
-        print("阶段2: 基本块 (Basic Blocks with BB)")
+        print("Phase 2: Basic Blocks (with BB)")
         print("=" * 80)
         print()
         self._print_instructions(self.bb_ir)
         print()
     
     def print_linear_ir(self):
-        """打印线性中间表示 (Linear IR) - 表达式拆分阶段
+        """Print linear intermediate representation (Linear IR) - expression splitting phase.
         
-        使用 LABEL_ 标签
+        Uses LABEL_ labels.
         """
         print("=" * 80)
-        print("阶段1: 表达式拆分 (Linear IR with LABEL)")
+        print("Phase 1: Expression Splitting (Linear IR with LABEL)")
         print("=" * 80)
         print()
         self._print_instructions(self.linear_ir)
         print()
     
     def _print_instructions(self, instructions):
-        """打印指令列表"""
+        """Print instruction list."""
         for instr in instructions:
             if isinstance(instr, IRLabel):
                 print(f"{instr.name}:")
@@ -273,59 +273,59 @@ class ControlFlowGraph:
             print()
     
     def to_mermaid(self) -> str:
-        """生成 Mermaid 流程图
+        """Generate Mermaid flowchart.
         
-        特点：
-        - 判断语句用菱形表示
-        - 基本块只包含普通指令（不含跳转）
-        - 显示完整的指令，不省略
+        Features:
+        - Conditional statements represented as diamond shapes
+        - Basic blocks contain only regular instructions (no jumps)
+        - Display full instructions without truncation
         """
         lines = ["flowchart TD"]
         
-        # 为每个块生成节点
+        # Generate nodes for each block
         for block in self.blocks:
             block_id = f"B{block.id}"
             
-            # 只显示普通指令（不含跳转）
+            # Show only regular instructions (no jumps)
             if block.instructions:
                 content = []
                 for instr in block.instructions:
                     instr_str = str(instr)
-                    # 转义特殊字符（只转义引号和&符号）
+                    # Escape special characters (only quotes and &)
                     instr_str = instr_str.replace('"', "'")
                     instr_str = instr_str.replace('&', '&amp;')
                     content.append(instr_str)
                 
-                # 用 <br/> 连接
+                # Join with <br/>
                 content_str = "<br/>".join(content)
                 
-                # 矩形节点（普通基本块）
+                # Rectangle node (regular basic block)
                 lines.append(f'    {block_id}["{content_str}"]')
             else:
-                # 空块
+                # Empty block
                 lines.append(f'    {block_id}["(empty)"]')
             
-            # 如果有条件跳转，创建菱形判断节点
+            # If there's a conditional jump, create diamond decision node
             if isinstance(block.terminator, IRCondJump):
                 cond_id = f"C{block.id}"
                 cond = block.terminator.cond
-                # 转义特殊字符（只转义 &，< > 在判断中可以保留）
+                # Escape special characters (only &, < > can remain in condition)
                 cond = cond.replace('&', '&amp;')
-                # 菱形节点（单层花括号）
+                # Diamond node (single curly braces)
                 lines.append(f'    {cond_id}{{{cond}}}')
         
         lines.append("")
         
-        # 生成边
+        # Generate edges
         for block in self.blocks:
             block_id = f"B{block.id}"
             
             if isinstance(block.terminator, IRCondJump):
-                # 条件跳转：基本块 -> 菱形判断 -> true/false 分支
+                # Conditional jump: basic block -> diamond -> true/false branches
                 cond_id = f"C{block.id}"
                 lines.append(f"    {block_id} --> {cond_id}")
                 
-                # false 分支：跳转到目标
+                # False branch: jump to target
                 target_label = block.terminator.label
                 false_target = None
                 for b in self.blocks:
@@ -333,7 +333,7 @@ class ControlFlowGraph:
                         false_target = b
                         break
                 
-                # true 分支：fall-through 到下一个块
+                # True branch: fall-through to next block
                 true_target = None
                 if len(block.successors) == 2:
                     for succ in block.successors:
@@ -347,22 +347,22 @@ class ControlFlowGraph:
                     lines.append(f"    {cond_id} -->|true| B{true_target.id}")
                 
             elif isinstance(block.terminator, IRJump):
-                # 无条件跳转：直接连接
+                # Unconditional jump: direct connection
                 target_label = block.terminator.label
                 for b in self.blocks:
                     if b.label == target_label:
                         lines.append(f"    {block_id} --> B{b.id}")
                         break
             else:
-                # 没有跳转：fall-through
+                # No jump: fall-through
                 if block.successors:
                     for succ in block.successors:
                         lines.append(f"    {block_id} --> B{succ.id}")
                 elif not block.successors:
-                    # 出口
+                    # Exit
                     lines.append(f"    {block_id} --> Exit([Exit])")
         
-        # 样式
+        # Styles
         lines.append("")
         if self.entry_block:
             lines.append(f"    style B{self.entry_block.id} fill:#e1f5e1")

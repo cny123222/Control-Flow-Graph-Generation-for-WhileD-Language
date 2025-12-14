@@ -1,7 +1,7 @@
 """
-WhileD 语言抽象语法树 (AST) 定义
+WhileD Language Abstract Syntax Tree (AST) Definition
 
-本模块定义了 WhileD 语言的 AST 节点类，包括表达式 (Expr) 和语句 (Com)
+This module defines AST node classes for the WhileD language, including expressions (Expr) and commands (Com).
 """
 
 from dataclasses import dataclass
@@ -9,18 +9,18 @@ from typing import Union
 
 
 def indent_lines(text: str, indent: str = "  ") -> str:
-    """为多行文本添加缩进"""
+    """Add indentation to multi-line text."""
     lines = text.split('\n')
     return '\n'.join(indent + line if line.strip() else line for line in lines)
 
 
 # =======================
-# 表达式 AST 节点
+# Expression AST Nodes
 # =======================
 
 @dataclass
 class EConst:
-    """整数常量：5, 10, 等等"""
+    """Integer constant: 5, 10, etc."""
     value: int
     
     def __str__(self):
@@ -28,7 +28,7 @@ class EConst:
 
 @dataclass
 class EVar:
-    """变量引用：x, y, 等等"""
+    """Variable reference: x, y, etc."""
     name: str
     
     def __str__(self):
@@ -36,12 +36,12 @@ class EVar:
 
 @dataclass
 class EBinop:
-    """二元运算：e1 + e2, e1 && e2, 等等
+    """Binary operation: e1 + e2, e1 && e2, etc.
     
-    运算符：
-    - 算术运算：+, -, *, /, %
-    - 比较运算：<, <=, ==, !=, >=, >
-    - 逻辑运算：&&, || (需要短路求值)
+    Operators:
+    - Arithmetic: +, -, *, /, %
+    - Comparison: <, <=, ==, !=, >=, >
+    - Logical: &&, || (requires short-circuit evaluation)
     """
     op: str
     left: 'Expr'
@@ -52,11 +52,11 @@ class EBinop:
 
 @dataclass
 class EUnop:
-    """一元运算：!e, -e
+    """Unary operation: !e, -e
     
-    运算符：
-    - ! : 逻辑非
-    - - : 算术取反
+    Operators:
+    - ! : Logical negation
+    - - : Arithmetic negation
     """
     op: str
     expr: 'Expr'
@@ -66,9 +66,9 @@ class EUnop:
 
 @dataclass
 class EDeref:
-    """指针解引用：*e
+    """Pointer dereference: *e
     
-    等同于 C 语言中的 *ptr
+    Equivalent to *ptr in C language.
     """
     expr: 'Expr'
     
@@ -77,10 +77,10 @@ class EDeref:
 
 @dataclass
 class EAddrOf:
-    """取地址运算符：&e
+    """Address-of operator: &e
     
-    等同于 C 语言中的 &var
-    注意：e 应该是左值（通常是 EVar）
+    Equivalent to &var in C language.
+    Note: e should be an L-value (typically EVar).
     """
     expr: 'Expr'
     
@@ -88,24 +88,24 @@ class EAddrOf:
         return f"(&{self.expr})"
 
 
-# 表达式类型别名
+# Expression type alias
 Expr = Union[EConst, EVar, EBinop, EUnop, EDeref, EAddrOf]
 
 
 # =======================
-# 语句 AST 节点
+# Command AST Nodes
 # =======================
 
 @dataclass
 class CSkip:
-    """空语句（无操作）"""
+    """Skip statement (no-op)"""
     
     def __str__(self):
         return "skip"
 
 @dataclass
 class CAsgnVar:
-    """变量赋值：x = e"""
+    """Variable assignment: x = e"""
     var: str
     expr: Expr
     
@@ -114,10 +114,10 @@ class CAsgnVar:
 
 @dataclass
 class CAsgnDeref:
-    """指针赋值：*e1 = e2
+    """Pointer assignment: *e1 = e2
     
-    将值 e2 存储到地址 e1
-    WhileD 语言特有
+    Store value e2 to address e1.
+    Specific to WhileD language.
     """
     addr: Expr
     value: Expr
@@ -127,21 +127,21 @@ class CAsgnDeref:
 
 @dataclass
 class CSeq:
-    """顺序组合：c1; c2"""
+    """Sequential composition: c1; c2"""
     first: 'Com'
     second: 'Com'
     
     def __str__(self):
         first_str = str(self.first)
         second_str = str(self.second)
-        # 如果 second 是多行，需要添加缩进
+        # If second is multi-line, add indentation
         if '\n' in second_str:
             second_str = indent_lines(second_str)
         return f"{first_str};\n{second_str}"
 
 @dataclass
 class CIf:
-    """条件语句：if (cond) then c1 else c2"""
+    """Conditional statement: if (cond) then c1 else c2"""
     cond: Expr
     then_branch: 'Com'
     else_branch: 'Com'
@@ -149,7 +149,7 @@ class CIf:
     def __str__(self):
         then_str = str(self.then_branch)
         else_str = str(self.else_branch)
-        # 为分支添加缩进
+        # Add indentation to branches
         if '\n' in then_str:
             then_str = indent_lines(then_str)
         else:
@@ -162,13 +162,13 @@ class CIf:
 
 @dataclass
 class CWhile:
-    """循环语句：while (cond) do body"""
+    """Loop statement: while (cond) do body"""
     cond: Expr
     body: 'Com'
     
     def __str__(self):
         body_str = str(self.body)
-        # 为循环体添加缩进
+        # Add indentation to loop body
         if '\n' in body_str:
             body_str = indent_lines(body_str)
         else:
@@ -176,5 +176,5 @@ class CWhile:
         return f"while ({self.cond}) do\n{body_str}"
 
 
-# 语句类型别名
+# Command type alias
 Com = Union[CSkip, CAsgnVar, CAsgnDeref, CSeq, CIf, CWhile]

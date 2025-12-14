@@ -42,9 +42,9 @@ class CFGGenerator:
         return f"LABEL_{self.label_counter}"
     
     def is_simple_operand(self, expr: Expr) -> bool:
-        """判断表达式是否为简单操作数（变量或常量）
+        """Check if expression is a simple operand (variable or constant).
         
-        简单操作数可以直接在指令中使用，不需要拆分到临时变量
+        Simple operands can be used directly in instructions without splitting into temporary variables.
         """
         return isinstance(expr, (EConst, EVar))
     
@@ -162,15 +162,14 @@ class CFGGenerator:
             left_instrs, left_var = self.flatten_expr(left)
             instructions.extend(left_instrs)
             
-            # 优化：只有简单操作数才跳过赋值，其他情况直接使用返回的变量
-            # 不再需要额外的赋值语句
+            # Optimization: Use the returned variable directly, no extra assignment needed
             cond_var = left_var
             
             # If left is false, jump to false_label
             instructions.append(IRCondJump(cond_var, false_label))
             
             # Evaluate right (only if left was true)
-            # 优化：直接将结果写入 result_temp
+            # Optimization: Write result directly to result_temp
             right_instrs, right_var = self.flatten_expr(right, result_temp)
             instructions.extend(right_instrs)
             
@@ -194,7 +193,7 @@ class CFGGenerator:
             left_instrs, left_var = self.flatten_expr(left)
             instructions.extend(left_instrs)
             
-            # 优化：直接使用返回的变量，不需要额外赋值
+            # Optimization: Use the returned variable directly, no extra assignment needed
             cond_var = left_var
             
             # If left is false, evaluate right
@@ -206,7 +205,7 @@ class CFGGenerator:
             
             # False label: evaluate right
             instructions.append(IRLabel(false_label))
-            # 优化：直接将结果写入 result_temp
+            # Optimization: Write result directly to result_temp
             right_instrs, right_var = self.flatten_expr(right, result_temp)
             instructions.extend(right_instrs)
             
@@ -237,21 +236,21 @@ class CFGGenerator:
             # Variable assignment: x = e
             expr = stmt.expr
             
-            # 优化：简单表达式直接生成一条指令，不拆分
+            # Optimization: Simple expressions generate a single instruction without splitting
             if isinstance(expr, (EConst, EVar)):
-                # x = 5 或 x = y（直接赋值）
+                # x = 5 or x = y (direct assignment)
                 source = str(expr.value) if isinstance(expr, EConst) else expr.name
                 return [IRAssign(stmt.var, source)]
             
             elif isinstance(expr, EUnop) and self.is_simple_operand(expr.expr):
-                # x = -y 或 x = !flag（简单一元运算）
+                # x = -y or x = !flag (simple unary operation)
                 inner = expr.expr
                 operand = str(inner.value) if isinstance(inner, EConst) else (inner.name if isinstance(inner, EVar) else str(inner))
                 return [IRUnOp(stmt.var, expr.op, operand)]
             
             elif isinstance(expr, EBinop) and expr.op not in ['&&', '||'] and \
                  self.is_simple_operand(expr.left) and self.is_simple_operand(expr.right):
-                # x = y + z（简单二元运算，但不包括短路运算符）
+                # x = y + z (simple binary operation, excluding short-circuit operators)
                 left_expr = expr.left
                 right_expr = expr.right
                 left = str(left_expr.value) if isinstance(left_expr, EConst) else (left_expr.name if isinstance(left_expr, EVar) else str(left_expr))
@@ -259,17 +258,17 @@ class CFGGenerator:
                 return [IRBinOp(stmt.var, left, expr.op, right)]
             
             elif isinstance(expr, EDeref) and self.is_simple_operand(expr.expr):
-                # x = *p（简单解引用）
+                # x = *p (simple dereference)
                 inner = expr.expr
                 addr = str(inner.value) if isinstance(inner, EConst) else (inner.name if isinstance(inner, EVar) else str(inner))
                 return [IRDeref(stmt.var, addr)]
             
             elif isinstance(expr, EAddrOf) and isinstance(expr.expr, EVar):
-                # x = &y（简单取址）
+                # x = &y (simple address-of)
                 return [IRAddrOf(stmt.var, expr.expr.name)]
             
             else:
-                # 复杂表达式：直接写入目标变量
+                # Complex expression: write directly to target variable
                 expr_instrs, expr_var = self.flatten_expr(expr, dest=stmt.var)
                 return expr_instrs
         
@@ -519,26 +518,26 @@ class CFGGenerator:
     # ==================
     
     def _convert_labels_to_bb(self, instructions: List[Instruction]) -> List[Instruction]:
-        """将 LABEL_ 标签转换为 BB_ 标签
+        """Convert LABEL_ labels to BB_ labels.
         
         Args:
-            instructions: 使用LABEL_标签的指令列表
+            instructions: List of instructions using LABEL_ labels
             
         Returns:
-            使用BB_标签的指令列表
+            List of instructions using BB_ labels
         """
-        # 建立 LABEL_ 到 BB_ 的映射
+        # Build mapping from LABEL_ to BB_
         label_map: dict[str, str] = {}
         bb_counter = 0
         
-        # 第一遍：找到所有标签并建立映射
+        # First pass: Find all labels and build mapping
         for instr in instructions:
             if isinstance(instr, IRLabel):
                 if instr.name not in label_map:
                     bb_counter += 1
                     label_map[instr.name] = f"BB_{bb_counter}"
         
-        # 第二遍：转换所有指令
+        # Second pass: Convert all instructions
         converted: List[Instruction] = []
         for instr in instructions:
             if isinstance(instr, IRLabel):
@@ -555,8 +554,8 @@ class CFGGenerator:
     def generate_cfg(self, program: Com) -> ControlFlowGraph:
         """Complete pipeline: AST → CFG.
         
-        Phase 1: Generate linear IR with LABEL_ (表达式拆分)
-        Phase 2: Convert to BB_ format (基本块)
+        Phase 1: Generate linear IR with LABEL_ (expression splitting)
+        Phase 2: Convert to BB_ format (basic blocks)
         Phase 3: Build CFG structure
         
         Args:
@@ -568,7 +567,7 @@ class CFGGenerator:
         # Phase 1: Generate linear IR with LABEL_
         instructions = self.process_statement(program)
         
-        # 确保第一条指令前有入口标签
+        # Ensure there's an entry label before the first instruction
         if instructions and not isinstance(instructions[0], IRLabel):
             instructions.insert(0, IRLabel("LABEL_entry"))
         
@@ -578,10 +577,10 @@ class CFGGenerator:
         # Phase 3: Build CFG
         blocks = self.build_cfg(bb_instructions)
         
-        # 返回 CFG，同时保存两个版本的IR
+        # Return CFG, saving both IR versions
         cfg = ControlFlowGraph(blocks)
-        cfg.linear_ir = instructions  # LABEL版本
-        cfg.bb_ir = bb_instructions   # BB版本
+        cfg.linear_ir = instructions  # LABEL version
+        cfg.bb_ir = bb_instructions   # BB version
         
         return cfg
 
