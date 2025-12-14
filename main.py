@@ -9,18 +9,21 @@ from ir_representation import *
 from cfg_generator import CFGGenerator
 
 
-def print_test_header(test_name: str, description: str):
-    """Print a formatted test header."""
+def print_test_header(test_num: int, test_name: str, source_program):
+    """Print a formatted test header with source program."""
     print("=" * 70)
-    print(f"TEST: {test_name}")
-    print(f"Description: {description}")
+    print(f"测试 {test_num}: {test_name}")
     print("=" * 70)
+    print("源程序:")
+    print("-" * 70)
+    print(source_program)
+    print("-" * 70)
     print()
 
 
 def print_cfg_result(cfg: ControlFlowGraph):
     """Print the CFG in the required format."""
-    print("Generated IR:")
+    print("生成的 IR:")
     print("-" * 70)
     print(cfg)
     print("-" * 70)
@@ -29,10 +32,7 @@ def print_cfg_result(cfg: ControlFlowGraph):
 
 def test_1_expression_splitting():
     """Test 1: Simple expression splitting (linearization)"""
-    print_test_header(
-        "Expression Splitting",
-        "Input: x = a + b + c\nExpected: Multi-step linearization"
-    )
+    source = "x = a + b + c"
     
     # AST: x = a + b + c
     # Parsed as: x = ((a + b) + c)
@@ -44,6 +44,8 @@ def test_1_expression_splitting():
         )
     )
     
+    print_test_header(1, "表达式拆分", source)
+    
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
     print_cfg_result(cfg)
@@ -51,10 +53,7 @@ def test_1_expression_splitting():
 
 def test_2_nested_expressions():
     """Test 2: Nested arithmetic and comparison"""
-    print_test_header(
-        "Nested Expressions",
-        "Input: result = (x + y) * (z - 10) < 100\nExpected: Multiple temp variables"
-    )
+    source = "result = (x + y) * (z - 10) < 100"
     
     # AST: result = (x + y) * (z - 10) < 100
     program = CAsgnVar(
@@ -68,6 +67,8 @@ def test_2_nested_expressions():
         )
     )
     
+    print_test_header(2, "嵌套表达式", source)
+    
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
     print_cfg_result(cfg)
@@ -75,10 +76,7 @@ def test_2_nested_expressions():
 
 def test_3_short_circuit_and():
     """Test 3: Short-circuit AND evaluation"""
-    print_test_header(
-        "Short-circuit AND",
-        "Input: result = p && (*p != 0)\nExpected: Control flow with jumps"
-    )
+    source = "result = p && *p != 0"
     
     # AST: result = p && (*p != 0)
     program = CAsgnVar(
@@ -89,6 +87,8 @@ def test_3_short_circuit_and():
         )
     )
     
+    print_test_header(3, "短路求值 AND", source)
+    
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
     print_cfg_result(cfg)
@@ -96,10 +96,7 @@ def test_3_short_circuit_and():
 
 def test_4_short_circuit_or():
     """Test 4: Short-circuit OR evaluation"""
-    print_test_header(
-        "Short-circuit OR",
-        "Input: result = (x == 0) || (y > 10)\nExpected: Control flow with jumps"
-    )
+    source = "result = x == 0 || y > 10"
     
     # AST: result = (x == 0) || (y > 10)
     program = CAsgnVar(
@@ -110,6 +107,8 @@ def test_4_short_circuit_or():
         )
     )
     
+    print_test_header(4, "短路求值 OR", source)
+    
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
     print_cfg_result(cfg)
@@ -117,10 +116,7 @@ def test_4_short_circuit_or():
 
 def test_5_while_loop():
     """Test 5: While loop"""
-    print_test_header(
-        "While Loop",
-        "Input: while (i < n) do { s = s + i; i = i + 1 }\nExpected: Loop with labels and jumps"
-    )
+    source = "while (i < n) do { s = s + i; i = i + 1 }"
     
     # AST: while (i < n) do { s = s + i; i = i + 1 }
     program = CWhile(
@@ -131,6 +127,8 @@ def test_5_while_loop():
         )
     )
     
+    print_test_header(5, "While 循环", source)
+    
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
     print_cfg_result(cfg)
@@ -138,10 +136,7 @@ def test_5_while_loop():
 
 def test_6_if_else():
     """Test 6: If-else statement"""
-    print_test_header(
-        "If-Else Statement",
-        "Input: if (x > 0) then y = x else y = -x\nExpected: Branching structure"
-    )
+    source = "if (x > 0) then y = x else y = -x"
     
     # AST: if (x > 0) then y = x else y = -x
     program = CIf(
@@ -150,6 +145,8 @@ def test_6_if_else():
         CAsgnVar("y", EUnop("-", EVar("x")))
     )
     
+    print_test_header(6, "If-Else 分支", source)
+    
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
     print_cfg_result(cfg)
@@ -157,16 +154,15 @@ def test_6_if_else():
 
 def test_7_pointer_operations():
     """Test 7: Pointer operations (address-of and dereference)"""
-    print_test_header(
-        "Pointer Operations",
-        "Input: p = &x; *p = 10\nExpected: Correct IR for pointer ops"
-    )
+    source = "p = &x; *p = 10"
     
     # AST: p = &x; *p = 10
     program = CSeq(
         CAsgnVar("p", EAddrOf(EVar("x"))),
         CAsgnDeref(EVar("p"), EConst(10))
     )
+    
+    print_test_header(7, "指针操作", source)
     
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
@@ -175,10 +171,7 @@ def test_7_pointer_operations():
 
 def test_8_complex_while_with_shortcircuit():
     """Test 8: While loop with short-circuit condition"""
-    print_test_header(
-        "Complex While with Short-circuit",
-        "Input: while (p != 0 && *p > 0) do { p = p + 1 }\nExpected: Nested control flow"
-    )
+    source = "while (p != 0 && *p > 0) do { p = p + 1 }"
     
     # AST: while (p != 0 && *p > 0) do { p = p + 1 }
     program = CWhile(
@@ -189,6 +182,8 @@ def test_8_complex_while_with_shortcircuit():
         CAsgnVar("p", EBinop("+", EVar("p"), EConst(1)))
     )
     
+    print_test_header(8, "While 循环（带短路求值）", source)
+    
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
     print_cfg_result(cfg)
@@ -196,10 +191,7 @@ def test_8_complex_while_with_shortcircuit():
 
 def test_9_nested_if():
     """Test 9: Nested if-else"""
-    print_test_header(
-        "Nested If-Else",
-        "Input: if (x > 0) then { if (y > 0) then z = 1 else z = 2 } else z = 3"
-    )
+    source = "if (x > 0) then { if (y > 0) then z = 1 else z = 2 } else z = 3"
     
     # AST: if (x > 0) then { if (y > 0) then z = 1 else z = 2 } else z = 3
     program = CIf(
@@ -212,6 +204,8 @@ def test_9_nested_if():
         CAsgnVar("z", EConst(3))
     )
     
+    print_test_header(9, "嵌套 If-Else", source)
+    
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
     print_cfg_result(cfg)
@@ -219,20 +213,9 @@ def test_9_nested_if():
 
 def test_10_comprehensive():
     """Test 10: Comprehensive test combining multiple features"""
-    print_test_header(
-        "Comprehensive Test",
-        "Complex program with loops, conditionals, and expressions"
-    )
+    source = "while (i < n) do { p = arr + i; if (*p > max) then max = *p else skip; i = i + 1 }"
     
     # AST: More complex program
-    # while (i < n) do {
-    #     if (arr[i] > max) then {
-    #         max = arr[i]
-    #     } else {
-    #         skip
-    #     }
-    #     i = i + 1
-    # }
     # Simplified without array indexing (use pointer arithmetic):
     # while (i < n) do {
     #     p = arr + i;
@@ -255,21 +238,18 @@ def test_10_comprehensive():
         )
     )
     
+    print_test_header(10, "综合测试", source)
+    
     generator = CFGGenerator()
     cfg = generator.generate_cfg(program)
     print_cfg_result(cfg)
-    
-    # Also print graph structure
-    print("CFG Structure Information:")
-    print("-" * 70)
-    cfg.print_graph_info()
 
 
 def run_all_tests():
     """Run all test cases."""
     print("\n")
     print("#" * 70)
-    print("# WhileD CFG Generator - Comprehensive Test Suite")
+    print("# WhileD 控制流图生成器 - 测试用例")
     print("#" * 70)
     print("\n")
     
